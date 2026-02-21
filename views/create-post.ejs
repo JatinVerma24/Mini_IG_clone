@@ -1,0 +1,66 @@
+<%- include('partials/header') %>
+
+    <div class="container create-post-container">
+        <div class="glass-container">
+            <h2 style="margin-bottom: 2rem; text-align: center;">Create New Post</h2>
+
+            <form action="/post" method="POST" enctype="multipart/form-data">
+
+                <div class="file-upload-wrapper" id="dropArea">
+                    <i class="fa-solid fa-cloud-arrow-up"
+                        style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 0.5rem;">Click or drag to upload media</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Supports JPG, PNG, MP4</p>
+                    <input type="file" name="media" id="mediaInput" required accept="image/*,video/*">
+                </div>
+
+                <div id="previewContainer"
+                    style="display: none; margin-bottom: 1.5rem; border-radius: 12px; overflow: hidden;">
+                    <img id="imagePreview" src="" alt="Preview"
+                        style="width: 100%; max-height: 400px; object-fit: contain; display: none;">
+                    <video id="videoPreview" src="" controls
+                        style="width: 100%; max-height: 400px; display: none;"></video>
+                </div>
+
+                <div class="form-group">
+                    <textarea name="caption" class="form-control" rows="4" placeholder="Write a caption..." required
+                        style="resize: vertical;"></textarea>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%;">Share Post</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const mediaInput = document.getElementById('mediaInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const videoPreview = document.getElementById('videoPreview');
+
+        mediaInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const fileType = file.type;
+                const objectUrl = URL.createObjectURL(file);
+
+                previewContainer.style.display = 'block';
+
+                if (fileType.startsWith('image/')) {
+                    imagePreview.src = objectUrl;
+                    imagePreview.style.display = 'block';
+                    videoPreview.style.display = 'none';
+                } else if (fileType.startsWith('video/')) {
+                    videoPreview.src = objectUrl;
+                    videoPreview.style.display = 'block';
+                    imagePreview.style.display = 'none';
+                }
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    </script>
+
+    </body>
+
+    </html>

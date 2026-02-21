@@ -1,0 +1,308 @@
+<%- include('partials/header') %>
+
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            border-radius: 20px;
+        }
+
+        .profile-pic-container {
+            flex-shrink: 0;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            padding: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-pic {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--glass-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            border: 4px solid var(--background);
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-username {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .profile-bio {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        .btn-profile {
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-edit:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .grid-item {
+            aspect-ratio: 1 / 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+        }
+
+        .grid-item img,
+        .grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .grid-item:hover img,
+        .grid-item:hover video {
+            transform: scale(1.05);
+        }
+
+        .grid-item-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .grid-item:hover .grid-item-overlay {
+            opacity: 1;
+        }
+
+        .overlay-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 1.5rem;
+            }
+
+            .profile-top {
+                flex-direction: column;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .posts-grid {
+                gap: 0.5rem;
+            }
+        }
+    </style>
+
+    <div class="profile-container">
+        <div class="glass-container profile-header">
+            <div class="profile-pic-container">
+                <% if (profileUser.profilePic) { %>
+                    <img src="<%= profileUser.profilePic %>" alt="Profile Picture" class="profile-pic">
+                    <% } else { %>
+                        <div class="profile-pic">
+                            <%= profileUser.username.charAt(0).toUpperCase() %>
+                        </div>
+                        <% } %>
+            </div>
+
+            <div class="profile-info">
+                <div class="profile-top">
+                    <div class="profile-username">
+                        <%= profileUser.username %>
+                    </div>
+
+                    <% if (user && user._id.toString()===profileUser._id.toString()) { %>
+                        <button class="btn btn-profile btn-edit">Edit Profile</button>
+                        <% } else if (user) { %>
+                            <% const isFollowing=user.following.some(id=> id.toString() === profileUser._id.toString());
+                                %>
+                                <button class="btn btn-profile <%= isFollowing ? 'btn-edit' : '' %>" id="follow-btn"
+                                    onclick="toggleFollow('<%= profileUser._id %>')">
+                                    <%= isFollowing ? 'Following' : 'Follow' %>
+                                </button>
+                                <% } %>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">
+                            <%= posts.length %>
+                        </span>
+                        <span class="stat-label">posts</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="followers-count">
+                            <%= profileUser.followers.length %>
+                        </span>
+                        <span class="stat-label">followers</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="following-count">
+                            <%= profileUser.following.length %>
+                        </span>
+                        <span class="stat-label">following</span>
+                    </div>
+                </div>
+
+                <div class="profile-bio">
+                    <%= profileUser.bio || 'New to minigram!' %>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 2rem 0;">
+
+        <div class="posts-grid">
+            <% if (posts.length===0) { %>
+                <div style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary); padding: 3rem;">
+                    <i class="fa-solid fa-camera" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <h3>No Posts Yet</h3>
+                </div>
+                <% } else { %>
+                    <% posts.forEach(post=> { %>
+                        <div class="grid-item">
+                            <% if (post.mediaUrl.match(/\.(mp4|mov)$/i)) { %>
+                                <video src="<%= post.mediaUrl %>" muted loop onmouseover="this.play()"
+                                    onmouseout="this.pause()"></video>
+                                <% } else { %>
+                                    <img src="<%= post.mediaUrl %>" alt="Post">
+                                    <% } %>
+                                        <div class="grid-item-overlay">
+                                            <div class="overlay-stat">
+                                                <i class="fa-solid fa-heart"></i>
+                                                <%= post.likes.length %>
+                                            </div>
+                                            <div class="overlay-stat">
+                                                <i class="fa-solid fa-comment"></i>
+                                                <%= post.comments.length %>
+                                            </div>
+                                        </div>
+                        </div>
+                        <% }) %>
+                            <% } %>
+        </div>
+    </div>
+
+    <script>
+        async function toggleFollow(userId) {
+            try {
+                const btn = document.getElementById('follow-btn');
+                const response = await fetch(`/profile/${userId}/follow`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Update UI counts
+                    document.getElementById('followers-count').textContent = data.followersCount;
+                    // Currently only viewing the user's profile, so updating the currently logged in user's following count isn't visually necessary unless they are viewing their own, but the button handles the "Follow" state.
+
+                    // Update button state
+                    if (data.isFollowing) {
+                        btn.textContent = 'Following';
+                        btn.classList.add('btn-edit');
+                    } else {
+                        btn.textContent = 'Follow';
+                        btn.classList.remove('btn-edit');
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+
+    </body>
+
+    </html>

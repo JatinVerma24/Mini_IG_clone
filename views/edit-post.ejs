@@ -1,0 +1,57 @@
+<%- include('partials/header') %>
+
+    <div class="container create-post-container">
+        <div class="glass-container">
+            <h2 style="margin-bottom: 2rem; text-align: center;">Edit Post</h2>
+
+            <div style="margin-bottom: 1.5rem; text-align: center;">
+                <% if (post.mediaUrl.match(/\.(mp4|mov)$/i)) { %>
+                    <video src="<%= post.mediaUrl %>" controls
+                        style="max-width: 100%; max-height: 300px; border-radius: 8px;"></video>
+                    <% } else { %>
+                        <img src="<%= post.mediaUrl %>" alt="Post Request"
+                            style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                        <% } %>
+            </div>
+
+            <!-- We use JS to submit as PUT -->
+            <form id="editForm" onsubmit="submitEdit(event, '<%= post._id %>')">
+                <div class="form-group">
+                    <textarea id="captionInput" name="caption" class="form-control" rows="4" required
+                        style="resize: vertical;"><%= post.caption %></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Save Changes</button>
+                <a href="/feed" class="btn btn-danger" style="width: 100%; margin-top: 10px; display: block;">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function submitEdit(e, id) {
+            e.preventDefault();
+            const caption = document.getElementById('captionInput').value;
+
+            try {
+                const response = await fetch(`/post/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ caption })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/feed';
+                } else {
+                    alert('Failed to update post');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error updating post');
+            }
+        }
+    </script>
+
+    </body>
+
+    </html>

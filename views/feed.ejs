@@ -1,0 +1,205 @@
+<%- include('partials/header') %>
+
+    <div class="container">
+        <% if (posts.length===0) { %>
+            <div class="glass-container" style="text-align: center; margin-top: 2rem;">
+                <h2>No posts yet!</h2>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">Be the first to share something amazing.</p>
+                <a href="/create-post" class="btn" style="margin-top: 1.5rem;">Create Post</a>
+            </div>
+            <% } else { %>
+                <% posts.forEach(post=> { %>
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="user-info">
+                                <a href="/profile/<%= post.user.username %>"
+                                    style="text-decoration: none; display: flex; align-items: center; gap: 10px; color: inherit;">
+                                    <div class="avatar-placeholder">
+                                        <%= post.user.username.charAt(0).toUpperCase() %>
+                                    </div>
+                                    <span class="username">
+                                        <%= post.user.username %>
+                                    </span>
+                                </a>
+                            </div>
+                            <% if (user && user._id.toString()===post.user._id.toString()) { %>
+                                <div class="post-actions">
+                                    <a href="/edit-post/<%= post._id %>" class="action-btn edit"
+                                        style="margin-right: 10px;">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <!-- Inline delete form for simplicity -->
+                                    <button class="action-btn delete" onclick="deletePost('<%= post._id %>')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                                <% } %>
+                        </div>
+
+                        <div class="post-media">
+                            <% if (post.mediaUrl.match(/\.(mp4|mov)$/i)) { %>
+                                <video src="<%= post.mediaUrl %>" controls></video>
+                                <% } else { %>
+                                    <img src="<%= post.mediaUrl %>" alt="Post Request">
+                                    <% } %>
+                        </div>
+
+                        <div class="post-interactions"
+                            style="padding: 10px 1.2rem; display: flex; gap: 1rem; align-items: center; font-size: 1.2rem;">
+                            <% const hasLiked=user && post.likes.some(like=> like.toString() === user._id.toString());
+                                %>
+                                <button class="action-btn like-btn <%= hasLiked ? 'liked' : '' %>"
+                                    onclick="toggleLike('<%= post._id %>', this)"
+                                    style="color: <%= hasLiked ? 'var(--danger)' : 'var(--text-secondary)' %>; font-size: 1.5rem;">
+                                    <i class="<%= hasLiked ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+                                </button>
+                                <span class="likes-count" style="font-size: 1rem; font-weight: 600;">
+                                    <%= post.likes.length %> likes
+                                </span>
+
+                                <button class="action-btn comment-icon" style="font-size: 1.5rem;"
+                                    onclick="document.getElementById('comment-input-<%= post._id %>').focus();">
+                                    <i class="fa-regular fa-comment"></i>
+                                </button>
+                        </div>
+
+                        <div class="post-body">
+                            <div class="post-date">
+                                <%= new Date(post.createdAt).toLocaleDateString() %>
+                            </div>
+                            <div class="caption">
+                                <strong>
+                                    <%= post.user.username %>
+                                </strong>
+                                <%= post.caption %>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 15px 0;">
+
+                            <div class="comments-section" id="comments-<%= post._id %>">
+                                <% post.comments.forEach(comment=> { %>
+                                    <div class="comment" style="margin-bottom: 5px; font-size: 0.9rem;">
+                                        <strong>
+                                            <a href="/profile/<%= comment.user.username %>"
+                                                style="color: inherit; text-decoration: none;">
+                                                <%= comment.user.username %>
+                                            </a>
+                                        </strong>
+                                        <%= comment.text %>
+                                    </div>
+                                    <% }) %>
+                            </div>
+
+                            <form class="comment-form" onsubmit="addComment(event, '<%= post._id %>')"
+                                style="margin-top: 15px; display: flex; gap: 10px;">
+                                <input type="text" id="comment-input-<%= post._id %>" class="form-control"
+                                    placeholder="Add a comment..." required style="padding: 0.5rem 1rem; flex-grow: 1;">
+                                <button type="submit" class="btn"
+                                    style="padding: 0.5rem 1rem; border-radius: 8px;">Post</button>
+                            </form>
+                        </div>
+                    </div>
+                    <% }) %>
+
+                        <% if (totalPages> 1) { %>
+                            <div class="pagination">
+                                <% if (page> 1) { %>
+                                    <a href="/feed?page=<%= page - 1 %>" class="page-btn">Previous</a>
+                                    <% } else { %>
+                                        <span class="page-btn disabled">Previous</span>
+                                        <% } %>
+
+                                            <% if (page < totalPages) { %>
+                                                <a href="/feed?page=<%= page + 1 %>" class="page-btn">Next</a>
+                                                <% } else { %>
+                                                    <span class="page-btn disabled">Next</span>
+                                                    <% } %>
+                            </div>
+                            <% } %>
+                                <% } %>
+    </div>
+
+    <script>
+        async function deletePost(id) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                try {
+                    const response = await fetch(`/post/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete post');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error deleting post');
+                }
+            }
+        }
+
+        async function toggleLike(id, btn) {
+            try {
+                const response = await fetch(`/post/${id}/like`, { method: 'PUT' });
+                if (response.ok) {
+                    const likes = await response.json();
+
+                    // Update like count text
+                    const container = btn.closest('.post-interactions');
+                    const countSpan = container.querySelector('.likes-count');
+                    countSpan.textContent = `${likes.length} likes`;
+
+                    // Toggle heart visual
+                    const icon = btn.querySelector('i');
+                    if (btn.classList.contains('liked')) {
+                        btn.classList.remove('liked');
+                        btn.style.color = 'var(--text-secondary)';
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                    } else {
+                        btn.classList.add('liked');
+                        btn.style.color = 'var(--danger)';
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function addComment(e, id) {
+            e.preventDefault();
+            const input = document.getElementById(`comment-input-${id}`);
+            const text = input.value;
+            if (!text.trim()) return;
+
+            try {
+                const response = await fetch(`/post/${id}/comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                if (response.ok) {
+                    const comments = await response.json();
+                    const latestComment = comments[comments.length - 1]; // The newly added one
+
+                    const commentsSection = document.getElementById(`comments-${id}`);
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '5px';
+                    div.style.fontSize = '0.9rem';
+                    div.innerHTML = `<strong><a href="/profile/${latestComment.user.username}" style="color: inherit; text-decoration: none;">${latestComment.user.username}</a></strong> ${latestComment.text}`;
+                    commentsSection.appendChild(div);
+
+                    input.value = '';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+
+    </body>
+
+    </html>

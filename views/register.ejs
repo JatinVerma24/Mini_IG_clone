@@ -1,0 +1,28 @@
+<%- include('partials/header') %>
+
+    <div class="auth-wrapper">
+        <div class="glass-container auth-form">
+            <h2>Create Account</h2>
+            <form action="/register" method="POST">
+                <div class="form-group">
+                    <input type="text" name="username" class="form-control" placeholder="Username" required
+                        minlength="3">
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" name="password" class="form-control" placeholder="Password" required
+                        minlength="6">
+                </div>
+                <button type="submit" class="btn">Sign Up</button>
+            </form>
+            <div class="auth-footer">
+                Already have an account? <a href="/login">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+    </html>
