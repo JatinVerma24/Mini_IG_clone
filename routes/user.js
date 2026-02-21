@@ -3,6 +3,33 @@ const router = express.Router();
 const User = require('../models/User');
 const Post = require('../models/Post');
 const { protect } = require('../middlewares/auth');
+const { upload } = require('../config/cloudinary');
+
+// Upload Profile Picture
+router.post('/profile/upload-pic', protect, upload.single('profilePic'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No image file provided' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.profilePic = req.file.path;
+        await user.save();
+
+        if (req.accepts('html')) {
+            return res.redirect(`/profile/${user.username}`);
+        }
+
+        res.json({ message: 'Profile picture updated', profilePic: user.profilePic });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
 
 // Get Profile by username
 router.get('/profile/:username', protect, async (req, res) => {

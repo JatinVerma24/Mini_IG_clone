@@ -234,8 +234,20 @@
                 </div>
 
                 <div class="profile-bio">
-                    <%= profileUser.bio || 'New to minigram!' %>
+                    <%= profileUser.bio || 'New to JatinIG!' %>
                 </div>
+
+                <% if (user && user._id.toString()===profileUser._id.toString()) { %>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <form action="/profile/upload-pic" method="POST" enctype="multipart/form-data"
+                            style="display: flex; gap: 10px; align-items: center;">
+                            <input type="file" name="profilePic" accept="image/*" required style="font-size: 0.9rem;"
+                                class="form-control">
+                            <button type="submit" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Upload
+                                Photo</button>
+                        </form>
+                    </div>
+                    <% } %>
             </div>
         </div>
 
